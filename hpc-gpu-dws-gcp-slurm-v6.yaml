@@ -101,7 +101,7 @@ deployment_groups:
       placement_max_distance: 2
 
   # use `-p c2d` to submit jobs to this partition:
-  # ex: `srun -p a2 -N 1 hostname`
+  # ex: `srun -p a3 -N 1 hostname`
   - id: a3_partition
     source: community/modules/compute/schedmd-slurm-gcp-v6-partition
     use: [a3_nodeset]
