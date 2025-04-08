@@ -41,13 +41,10 @@ deployment_groups:
 - group: primary
   modules:
   - id: network
-    source: modules/network/vpc # Use the standard VPC module
-    # settings:
-    # Add any specific VPC settings here if needed,
-    # otherwise remove the settings block or leave it empty
-    # The module will create a network and subnet based on deployment_name/region
-    # Example: customize subnet range if desired
-     # subnet_cidr: 10.1.0.0/16
+    source: modules/network/pre-existing-vpc
+    settings:
+      network_name: vpc-hpc
+      subnetwork_name: us-central1
 
   - id: firewall_rule
     source: modules/network/firewall-rules
