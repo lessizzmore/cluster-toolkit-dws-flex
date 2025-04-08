@@ -1,0 +1,144 @@
+blueprint_name: hpc-gpu-dws-gcp-slurm-v6
+
+vars:
+  project_id: northam-ce-mlai-tpu ## Set GCP Project ID Here ##
+  deployment_name: ztan-hpc-gpu-dws
+  region: us-central1
+  zone: us-central1-a
+  zones: [us-central1-b, us-central1-c, us-central1-f]
+  allow_automatic_updates: false
+
+  service_account_login_node: loginnode@$(vars.project_id).iam.gserviceaccount.com
+  service_account_controller_node: controllernode@$(vars.project_id).iam.gserviceaccount.com
+  service_account_compute_node: computenode@$(vars.project_id).iam.gserviceaccount.com
+
+  #gpu_zones: [us-central1-a, us-central1-b, us-central1-c, us-central1-f]
+  slurm_image:
+    # Visit https://github.com/GoogleCloudPlatform/slurm-gcp/blob/master/docs/images.md#published-image-family
+    # for a list of valid family options with Slurm
+    family: slurm-gcp-6-6-hpc-rocky-linux-8
+    project: schedmd-slurm-public
+  # If image above is changed to use custom image, then setting below must be set to true
+  instance_image_custom: false
+
+#    family: my-slurm-image
+#    project: $(vars.project_id)
+#  instance_image_custom: true
+
+
+# Recommended to use GCS backend for Terraform state
+# See https://github.com/GoogleCloudPlatform/hpc-toolkit/tree/main/examples#optional-setting-up-a-remote-terraform-state
+#
+terraform_backend_defaults:
+  type: gcs
+  configuration:
+    bucket: ztan-hpc-sandbox-tfstate #must be created before
+
+# Documentation for each of the modules used below can be found at
+# https://github.com/GoogleCloudPlatform/hpc-toolkit/blob/main/modules/README.md
+
+deployment_groups:
+- group: primary
+  modules:
+  - id: network
+    source: modules/network/pre-existing-vpc
+    settings:
+      network_name: ztan-vpc-hpc
+      subnetwork_name: us-central1
+
+  - id: firewall_rule
+    source: modules/network/firewall-rules
+    use: [network]
+    settings:
+      ingress_rules:
+      - name: $(network.subnetwork_name)-allow-internal-traffic
+        description: Allow internal traffic
+        destination_ranges:
+        - $(network.subnetwork_address)
+        source_ranges:
+        - $(network.subnetwork_address)
+        allow:
+        - protocol: tcp
+          ports:
+          - 0-65535
+        - protocol: udp
+          ports:
+          - 0-65535
+        - protocol: icmp
+      - name: $(network.subnetwork_name)-allow-iap-ssh
+        description: Allow IAP-tunneled SSH connections
+        destination_ranges:
+        - $(network.subnetwork_address)
+        source_ranges:
+        - 35.235.240.0/20
+        allow:
+        - protocol: tcp
+          ports:
+          - 22
+
+
+  - id: a3_nodeset
+    source: community/modules/compute/schedmd-slurm-gcp-v6-nodeset
+    use: [network]
+    settings:
+      instance_properties:
+        reservationAffinity:
+          consumeReservationType: NO_RESERVATION
+        scheduling:
+          maxRunDuration: { seconds: $(2 * 60 * 60) } # 2 hours
+          onHostMaintenance: TERMINATE
+          instanceTerminationAction: DELETE
+      node_count_dynamic_max: 16
+      machine_type: a3-megagpu-8g
+      instance_image: $(vars.slurm_image)
+      service_account_email: $(vars.service_account_compute_node)
+      bandwidth_tier: gvnic_enabled # or tier_1_enabled https://cloud.google.com/compute/docs/networking/configure-vm-with-high-bandwidth-configuration#bandwidth-tiers
+      disk_type: pd-balanced # or pd-ssd
+      disk_size_gb: 1024
+      enable_public_ips: false
+      enable_placement: true
+      enable_smt: true
+
+  # use `-p c2d` to submit jobs to this partition:
+  # ex: `srun -p a2 -N 1 hostname`
+  - id: a3_partition
+    source: community/modules/compute/schedmd-slurm-gcp-v6-partition
+    use: [a3_nodeset]
+    settings:
+      partition_name: a3
+
+  - id: slurm_login
+    source: community/modules/scheduler/schedmd-slurm-gcp-v6-login
+    use: [network]
+    settings:
+      instance_image: $(vars.slurm_image)
+      machine_type: n2-standard-2
+      service_account_email: $(vars.service_account_login_node)
+      # we recommend disabling public IPs if possible
+      # but that requires your network to have a NAT or
+      # private access configured
+      enable_login_public_ips: false
+
+
+  - id: slurm_controller
+    source: community/modules/scheduler/schedmd-slurm-gcp-v6-controller
+    use: [network, slurm_login, a3_partition]
+    settings:
+      instance_image: $(vars.slurm_image)
+      machine_type: c2-standard-4
+      service_account_email: $(vars.service_account_controller_node)
+      # the following allow for longer boot time
+      # which is useful for large GPU nodes
+      cloud_parameters:
+        no_comma_params: false
+        resume_rate: 0
+        resume_timeout: 600
+        suspend_rate: 0
+        suspend_timeout: 600
+      # we recommend disabling public IPs if possible
+      # but that requires your network to have a NAT or
+      # private access configured
+      enable_controller_public_ips: false
+      enable_slurm_gcp_plugins:
+        max_hops:
+          max_hops: 2
