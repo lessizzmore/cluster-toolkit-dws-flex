@@ -1,1 +1,13 @@
+# create GCS bucket for tfstate
+gcloud storage buckets create gs://ztan-hpc-sandbox-tfstate \
+    --project=northam-ce-mlai-tpu \
+    --default-storage-class=STANDARD --location=us-central1 \
+    --uniform-bucket-level-access
+gcloud storage buckets update gs://ztan-hpc-sandbox-tfstate --versioning
 
+
+# create deployment folder from the cluster blueprint
+./gcluster create hpc-gpu-dws-gcp-slurm-v6.yaml -l ERROR --vars project_id=northam-ce-mlai-tpu
+
+# deploy HPC cluster using Terraform
+./gcluster deploy ztan-hpc-gpu-dws
