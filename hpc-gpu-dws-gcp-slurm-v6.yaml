@@ -96,8 +96,9 @@ deployment_groups:
       disk_type: pd-balanced # or pd-ssd
       disk_size_gb: 1024
       enable_public_ips: false
-      enable_placement: true
-      enable_smt: true
+      advanced_machine_features:
+        threads_per_core: 2 # Set to 2 to enable SMT (Simultaneous Multithreading), or 1 to disable.
+      placement_max_distance: 2
 
   # use `-p c2d` to submit jobs to this partition:
   # ex: `srun -p a2 -N 1 hostname`
@@ -139,6 +140,4 @@ deployment_groups:
       # but that requires your network to have a NAT or
       # private access configured
       enable_controller_public_ips: false
-      enable_slurm_gcp_plugins:
-        max_hops:
-          max_hops: 2
+
