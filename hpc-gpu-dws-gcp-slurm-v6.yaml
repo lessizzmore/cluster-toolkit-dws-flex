@@ -43,7 +43,7 @@ deployment_groups:
   - id: network
     source: modules/network/pre-existing-vpc
     settings:
-      network_name: vpc-hpc
+      network_name: ztan-vpc-hpc
       subnetwork_name: us-central1
 
   - id: firewall_rule
