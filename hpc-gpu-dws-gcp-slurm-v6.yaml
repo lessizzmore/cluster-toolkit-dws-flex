@@ -46,35 +46,35 @@ deployment_groups:
       network_name: ztan-vpc-hpc
       subnetwork_name: us-central1
 
-  - id: firewall_rule
-    source: modules/network/firewall-rules
-    use: [network]
-    settings:
-      ingress_rules:
-      - name: $(network.subnetwork_name)-allow-internal-traffic
-        description: Allow internal traffic
-        destination_ranges:
-        - $(network.subnetwork_address)
-        source_ranges:
-        - $(network.subnetwork_address)
-        allow:
-        - protocol: tcp
-          ports:
-          - 0-65535
-        - protocol: udp
-          ports:
-          - 0-65535
-        - protocol: icmp
-      - name: $(network.subnetwork_name)-allow-iap-ssh
-        description: Allow IAP-tunneled SSH connections
-        destination_ranges:
-        - $(network.subnetwork_address)
-        source_ranges:
-        - 35.235.240.0/20
-        allow:
-        - protocol: tcp
-          ports:
-          - 22
+  # - id: firewall_rule
+  #   source: modules/network/firewall-rules
+  #   use: [network]
+  #   settings:
+  #     ingress_rules:
+  #     - name: $(network.subnetwork_name)-allow-internal-traffic
+  #       description: Allow internal traffic
+  #       destination_ranges:
+  #       - $(network.subnetwork_address)
+  #       source_ranges:
+  #       - $(network.subnetwork_address)
+  #       allow:
+  #       - protocol: tcp
+  #         ports:
+  #         - 0-65535
+  #       - protocol: udp
+  #         ports:
+  #         - 0-65535
+  #       - protocol: icmp
+  #     - name: $(network.subnetwork_name)-allow-iap-ssh
+  #       description: Allow IAP-tunneled SSH connections
+  #       destination_ranges:
+  #       - $(network.subnetwork_address)
+  #       source_ranges:
+  #       - 35.235.240.0/20
+  #       allow:
+  #       - protocol: tcp
+  #         ports:
+  #         - 22
 
 
   - id: a3_nodeset
@@ -101,7 +101,7 @@ deployment_groups:
       enable_public_ips: false
       advanced_machine_features:
         threads_per_core: 2 # Set to 2 to enable SMT (Simultaneous Multithreading), or 1 to disable.
-      placement_max_distance: 2
+      # placement_max_distance: 2
 
 
   # use `-p c2d` to submit jobs to this partition:
