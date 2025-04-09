@@ -12,6 +12,67 @@ gcloud storage buckets create gs://ztan-hpc-sandbox-tfstate \
 gcloud storage buckets update gs://ztan-hpc-sandbox-tfstate --versioning
 ```
 
+create VPC, subnet and firewall rules
+```
+# Set variables (optional, but makes commands easier to read/modify)
+# Using the project ID from our previous discussion.
+export PROJECT_ID="diesel-patrol-382622"
+export VPC_NAME="ztan-vpc-hpc"
+export SUBNET_NAME="us-central1" # As per your original YAML intent
+export SUBNET_REGION="us-central1"
+export SUBNET_CIDR="10.128.0.0/20" # <-- Replace with your desired CIDR range if different
+
+# Set the default project for gcloud commands
+gcloud config set project $PROJECT_ID
+
+# 1. Create the VPC network
+#    --subnet-mode=custom is important so we can define subnets manually.
+echo "Creating VPC network: $VPC_NAME..."
+gcloud compute networks create $VPC_NAME \
+    --project=$PROJECT_ID \
+    --subnet-mode=custom \
+    --mtu=1460 \
+    --bgp-routing-mode=regional
+
+# 2. Create the subnetwork
+#    Replace --range with the specific IP CIDR block you want to use.
+echo "Creating subnetwork: $SUBNET_NAME in region $SUBNET_REGION..."
+gcloud compute networks subnets create $SUBNET_NAME \
+    --project=$PROJECT_ID \
+    --network=$VPC_NAME \
+    --region=$SUBNET_REGION \
+    --range=$SUBNET_CIDR
+
+# 3. Create the internal traffic firewall rule
+#    Allows all TCP, UDP, and ICMP traffic originating from within the subnet.
+export FW_RULE_INTERNAL_NAME="${SUBNET_NAME}-allow-internal-traffic"
+echo "Creating firewall rule: $FW_RULE_INTERNAL_NAME..."
+gcloud compute firewall-rules create $FW_RULE_INTERNAL_NAME \
+    --project=$PROJECT_ID \
+    --network=$VPC_NAME \
+    --action=ALLOW \
+    --direction=INGRESS \
+    --source-ranges=$SUBNET_CIDR \
+    --rules=tcp:0-65535,udp:0-65535,icmp \
+    --description="Allow internal traffic within the $SUBNET_NAME subnetwork"
+
+# 4. Create the IAP SSH firewall rule
+#    Allows TCP traffic on port 22 (SSH) only from Google's IAP service range.
+export FW_RULE_IAP_SSH_NAME="${SUBNET_NAME}-allow-iap-ssh"
+echo "Creating firewall rule: $FW_RULE_IAP_SSH_NAME..."
+gcloud compute firewall-rules create $FW_RULE_IAP_SSH_NAME \
+    --project=$PROJECT_ID \
+    --network=$VPC_NAME \
+    --action=ALLOW \
+    --direction=INGRESS \
+    --source-ranges=35.235.240.0/20 \
+    --rules=tcp:22 \
+    --description="Allow IAP-tunneled SSH connections to the $SUBNET_NAME subnetwork"
+
+echo "Infrastructure creation commands generated."
+echo "Remember to replace the SUBNET_CIDR if needed."
+
+```
 
 create deployment folder from the cluster blueprint
 ```
