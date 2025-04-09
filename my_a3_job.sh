@@ -5,7 +5,7 @@
 #SBATCH -J gpu_monitor_job      # Job name
 #SBATCH -o slurm_gpu_%j.out     # Standard output file (%j expands to jobID)
 #SBATCH -e slurm_gpu_%j.err     # Standard error file (%j expands to jobID)
-#SBATCH -p gpu_partition        # Partition (queue) name - *Replace with your cluster's GPU partition*
+#SBATCH -p a3        # Partition (queue) name - *Replace with your cluster's GPU partition*
 #SBATCH -N 1                    # Number of nodes
 #SBATCH --ntasks-per-node=1     # Number of tasks (processes) per node
 #SBATCH --gres=gpu:1            # Request 1 GPU resource - *Syntax might vary (e.g., gpu:v100:1)*
