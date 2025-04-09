@@ -18,7 +18,7 @@ create VPC, subnet and firewall rules
 # Using the project ID from our previous discussion.
 export PROJECT_ID="northam-ce-mlai-tpu"
 export VPC_NAME="ztan-vpc-hpc"
-export SUBNET_NAME="us-central1" # As per your original YAML intent
+export SUBNET_NAME="ztan-subnet-us-central1" # As per your original YAML intent
 export SUBNET_REGION="us-central1"
 export SUBNET_CIDR="10.128.0.0/20" # <-- Replace with your desired CIDR range if different
 
