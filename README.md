@@ -16,7 +16,7 @@ create VPC, subnet and firewall rules
 ```
 # Set variables (optional, but makes commands easier to read/modify)
 # Using the project ID from our previous discussion.
-export PROJECT_ID="diesel-patrol-382622"
+export PROJECT_ID="northam-ce-mlai-tpu"
 export VPC_NAME="ztan-vpc-hpc"
 export SUBNET_NAME="us-central1" # As per your original YAML intent
 export SUBNET_REGION="us-central1"
