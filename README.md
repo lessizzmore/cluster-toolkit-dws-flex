@@ -1,3 +1,7 @@
+# set the default Google Cloud project for your gcloud command-line tool configuration is:
+
+gcloud config set project northam-ce-mlai-tpu
+
 # create GCS bucket for tfstate
 gcloud storage buckets create gs://ztan-hpc-sandbox-tfstate \
     --project=northam-ce-mlai-tpu \
