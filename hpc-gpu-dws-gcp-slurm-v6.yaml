@@ -81,13 +81,16 @@ deployment_groups:
     source: community/modules/compute/schedmd-slurm-gcp-v6-nodeset
     use: [network]
     settings:
-      instance_properties:
-        reservationAffinity:
-          consumeReservationType: NO_RESERVATION
-        scheduling:
-          maxRunDuration: { seconds: $(2 * 60 * 60) } # 2 hours
-          onHostMaintenance: TERMINATE
-          instanceTerminationAction: DELETE
+      dws_flex:
+        max_run_duration: 3600 # 1 hour
+      enable_placement: false
+      # instance_properties:
+      #   reservationAffinity:
+      #     consumeReservationType: NO_RESERVATION
+      #   scheduling:
+      #     maxRunDuration: { seconds: $(2 * 60 * 60) } # 2 hours
+      #     onHostMaintenance: TERMINATE
+      #     instanceTerminationAction: DELETE
       node_count_dynamic_max: 16
       machine_type: a3-megagpu-8g
       instance_image: $(vars.slurm_image)
@@ -99,6 +102,7 @@ deployment_groups:
       advanced_machine_features:
         threads_per_core: 2 # Set to 2 to enable SMT (Simultaneous Multithreading), or 1 to disable.
       placement_max_distance: 2
+
 
   # use `-p c2d` to submit jobs to this partition:
   # ex: `srun -p a3 -N 1 hostname`
