@@ -149,3 +149,16 @@ gcloud projects add-iam-policy-binding northam-ce-mlai-tpu \
     --member="serviceAccount:loginnode@northam-ce-mlai-tpu.iam.gserviceaccount.com" \
     --role="roles/monitoring.metricWriter"
 ```
+
+SSH into the Login Node
+Replace placeholders with your actual credentials. or using web UI
+```
+ssh your_username@login.node.cluster.address
+```
+
+You need a script file that tells Slurm what resources you need and what commands to run. Create a file named gpu_job.sbatch
+
+Use the sbatch command to submit your script to the Slurm scheduler:
+```
+sbatch gpu_job.sbatch
+```
