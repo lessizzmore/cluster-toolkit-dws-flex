@@ -162,3 +162,48 @@ Use the sbatch command to submit your script to the Slurm scheduler:
 ```
 sbatch gpu_job.sbatch
 ```
+
+
+```
+# https://cloud.google.com/compute/docs/gpus/create-gpu-vm-a3u-a4
+export PROJECT_ID="the-foo-bar"
+# export MACHINE_TYPE="a3-ultragpu-8g"
+export MACHINE_TYPE="a4-highgpu-8g"
+
+# This image took like 10+ minutes to boot
+# export IMAGE_PROJECT="debian-cloud"
+# export IMAGE_FAMILY="debian-12"
+
+# This worked
+# https://cloud.google.com/ai-hypercomputer/docs/software-stack#os-image
+export IMAGE_PROJECT="ubuntu-os-accelerator-images"
+export IMAGE_FAMILY="ubuntu-accelerator-2404-amd64-with-nvidia-570"
+
+# This image doesn't work
+# export IMAGE_PROJECT="deeplearning-platform-release"
+# export IMAGE_FAMILY="common-cu124"
+# common-cu124-v20250325-debian-11-py310
+
+export DISK_SIZE="200GB"
+export ZONE="us-central1-b"
+export INSTANCE_NAME="test-instance"
+export NETWORK="projects/the-foo-bar/global/networks/default"
+export SUBNET="projects/the-foo-bar/regions/us-central1/subnetworks/default"
+export TERMINATION_ACTION="STOP"
+
+gcloud config set project $PROJECT_ID
+gcloud auth application-default set-quota-project $PROJECT_ID
+
+
+gcloud beta compute instances create $INSTANCE_NAME  \
+    --machine-type=$MACHINE_TYPE \
+    --image-family=$IMAGE_FAMILY \
+    --image-project=$IMAGE_PROJECT \
+    --provisioning-model=SPOT \
+    --instance-termination-action=$TERMINATION_ACTION \
+    --zone=$ZONE \
+    --boot-disk-type=hyperdisk-balanced \
+    --boot-disk-size=$DISK_SIZE \
+    --scopes=cloud-platform \
+    --network-interface=nic-type=GVNIC,network=$NETWORK,subnet=$SUBNET
+```
